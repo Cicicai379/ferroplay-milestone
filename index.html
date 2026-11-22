@@ -104,20 +104,20 @@
     <p>CS 184 Final Project Milestone<br>Team Members: Cici Cai, Ian Meng Si, Stephanie Yao, William Xu</p>
 
     <h2>1. Introduction and Progress Summary</h2>
-    <p>We built FerroPlay to explore how magnet position and strength affect a ferrofluid surface. Our milestone prototype let users move a virtual magnet over a transparent circular dish and adjust its strength.</p>
+    <p>We built FerroPlay to explore how magnet position and strength change a ferrofluid surface. For the milestone, we built an interactive prototype with a transparent circular dish and one virtual magnet that users can move and adjust. A strong field creates a cluster of peaks near the magnet, and the surface settles when the field is turned off.</p>
 
     <h2>2. Research Results</h2>
-    <p>Cowley and Rosensweig showed that a vertical magnetic field can turn small disturbances in a ferrofluid surface into peaks. Their analysis explained why gravity and surface tension suppress different ripple sizes, while the magnetic field can amplify a band of sizes between them. <a href="https://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/abs/interfacial-stability-of-a-ferromagnetic-fluid/B40DFB1706780F071CDC7B0DFBFF7FCD">Cowley and Rosensweig (1967)</a></p>
-    <p>We modelled the liquid surface by tracking its height <var>h</var> and vertical velocity <var>v</var> at each point on a circular mesh. We measured height relative to the flat resting surface.</p>
+    <p>Cowley and Rosensweig showed that a vertical magnetic field can turn small disturbances in a ferrofluid surface into peaks. Their analysis explains why gravity and surface tension suppress different ripple sizes, while the magnetic field can amplify a band of sizes between them. <a href="https://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/abs/interfacial-stability-of-a-ferromagnetic-fluid/B40DFB1706780F071CDC7B0DFBFF7FCD">Cowley and Rosensweig (1967)</a></p>
+    <p>We model the liquid surface by tracking its height <var>h</var> and vertical velocity <var>v</var> at each point on a circular mesh. Height is measured relative to the flat resting surface. The first equation combines the effects that push the surface up or down.</p>
     <p class="equation"><var>A</var>(<var>h</var>) = −<var>gh</var> − <var>cLh</var> + <var>F</var> + <var>R</var>(<var>h</var>)</p>
-    <p>The <strong>gravity-like term</strong> (−<var>gh</var>) pulled raised areas down and pushed dips back up. The <strong>surface-tension term</strong> (−<var>cLh</var>) smoothed bumps and dips, with <var>L</var> measuring how each point’s height differs from its neighbors. The coefficients <var>g</var> and <var>c</var> set the restoring and smoothing strengths. The <strong>magnetic term</strong> <var>F</var> lifted the liquid and could amplify ripples near the magnet. The <strong>floor term</strong> <var>R</var>(<var>h</var>) pushed deep dips upward as they approached the bottom of the dish.</p>
-    <p>The solver applied damping to slow the motion and advanced by 1/240 of a simulated second. At each step, it removed the area-weighted mean from velocity and height, so a rise in one area was balanced by a dip elsewhere.</p>
-    <p>To model ripple growth under a <strong>uniform magnetic field</strong>, we started with tiny, repeatable bumps and dips. We assigned each ripple an effective stiffness <var>K</var>(<var>x</var>) to determine whether it would flatten or grow. Here, <var>x</var> is the ripple’s squared wavenumber divided by a reference squared wavenumber. Larger <var>x</var> means the crests are closer together.</p>
+    <p>The <strong>gravity-like term</strong> (−<var>gh</var>) pulls raised areas down and pushes dips back up. The <strong>surface-tension term</strong> (−<var>cLh</var>) smooths bumps and dips, with <var>L</var> measuring how each point’s height differs from its neighbors. The coefficients <var>g</var> and <var>c</var> set the strength of these effects. The <strong>magnetic term</strong> <var>F</var> lifts the liquid and can amplify ripples near the magnet. The <strong>floor term</strong> <var>R</var>(<var>h</var>) pushes deep dips upward as they approach the bottom of the dish.</p>
+    <p>The solver applies damping to slow the motion and advances by 1/240 of a simulated second. At each step, it removes the area-weighted mean from the updated velocity, then advances the height and removes its area-weighted mean. This lets the liquid rise in one area and dip elsewhere while keeping the same volume.</p>
+    <p>To model ripple growth under a <strong>uniform magnetic field</strong>, we start with tiny, repeatable bumps and dips. Each ripple has an effective stiffness <var>K</var>(<var>x</var>) that tells us whether it tends to flatten or grow. Here, <var>x</var> is the ripple’s squared wavenumber divided by a reference squared wavenumber. Larger <var>x</var> means the crests are closer together.</p>
     <p class="equation"><var>K</var>(<var>x</var>) = <var>g</var>[1 + <var>x</var> − 4<var>Cx</var>/(1 + <var>x</var>)]</p>
-    <p>Inside the brackets, 1 represents gravity-like restoring, and <var>x</var> represents surface tension, which pushes back hardest on closely spaced ripples. The last term lowers the stiffness as field coupling <var>C</var> increases. Ripples grew when <var>K</var>(<var>x</var>) fell below zero. Peaks formed where growing ripples reinforced each other, so the starting bumps and the dish boundary influenced where they appeared.</p>
+    <p>Inside the brackets, 1 represents gravity-like restoring, and <var>x</var> represents surface tension, which pushes back hardest on closely spaced ripples. The last term lowers the stiffness as field coupling <var>C</var> increases. If <var>K</var>(<var>x</var>) drops below zero, the ripple grows. Peaks form where growing ripples reinforce each other, so the starting bumps and the dish boundary influence where they appear.</p>
 
     <h2>3. Preliminary Results and Core Simulation</h2>
-    <p>All 16 automated checks passed in our Windows Release builds.</p>
+    <p>In the viewer, sliders control magnet position, height, and strength. All 16 automated checks passed in the team’s Windows Release builds. Three circular-dish results are shown below.</p>
     <table class="results">
       <thead><tr><th scope="col">Test</th><th scope="col">Observed result</th></tr></thead>
       <tbody>
@@ -126,20 +126,20 @@
         <tr><th scope="row">Field switch-off</th><td>After we turned the field off, the surface was nearly flat within three simulated seconds.</td></tr>
       </tbody>
     </table>
-    <p>We chose 49 samples across the dish for smoother peak outlines. In uncapped Windows tests at 1180 × 730, 95% of moving-magnet frames took about 9.6 ms or less.</p>
+    <p>The default mesh uses 49 samples across the dish for smoother peak outlines. In uncapped Windows tests at 1180 × 730, 95% of moving-magnet frames took about 9.6 ms or less.</p>
 
     <div class="prototype-grid" aria-label="FerroPlay circular-dish demo screenshots">
       <figure>
-        <img src="captures/circular-pass/demo/01-no-field.png" alt="Field off. The liquid surface started flat.">
-        <figcaption>Field off. The liquid surface started flat.</figcaption>
+        <img src="captures/circular-pass/demo/01-no-field.png" alt="Field off. The liquid surface starts flat.">
+        <figcaption>Field off. The liquid surface starts flat.</figcaption>
       </figure>
       <figure>
-        <img src="captures/circular-pass/demo/02-stationary-magnet.png" alt="Strong field. Peaks formed near the stationary magnet.">
-        <figcaption>Strong field. Peaks formed near the stationary magnet.</figcaption>
+        <img src="captures/circular-pass/demo/02-stationary-magnet.png" alt="Strong field. Peaks form near the stationary magnet.">
+        <figcaption>Strong field. Peaks form near the stationary magnet.</figcaption>
       </figure>
       <figure>
-        <img src="captures/circular-pass/demo/weak-field-without-ui.png" alt="Weak field. The surface rose slightly beneath the magnet.">
-        <figcaption>Weak field. The surface rose slightly beneath the magnet.</figcaption>
+        <img src="captures/circular-pass/demo/weak-field-without-ui.png" alt="Weak field. The surface rises slightly beneath the magnet.">
+        <figcaption>Weak field. The surface rises slightly beneath the magnet.</figcaption>
       </figure>
       <figure>
         <div class="peak-crop">
@@ -149,7 +149,7 @@
       </figure>
       <figure>
         <img src="captures/circular-pass/demo/05-normal-field.png" alt="Peaks spread across the circular dish under a uniform vertical magnetic field.">
-        <figcaption>Uniform vertical field. Peaks formed across the dish.</figcaption>
+        <figcaption>Uniform vertical field. Peaks form across the dish.</figcaption>
       </figure>
       <figure>
         <img src="captures/circular-pass/demo/06-full-ui.png" alt="FerroPlay viewer showing the dish and magnet controls.">
