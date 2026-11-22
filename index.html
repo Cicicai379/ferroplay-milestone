@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>FerroPlay: Interactive Magnetic Fluid Simulation | Milestone</title>
+
+  <style>
+    body {
+      max-width: 850px;
+      margin: 28px auto;
+      padding: 0 24px;
+      color: #111;
+      background: white;
+      font: 16px/1.45 Arial, sans-serif;
+    }
+
+    h1 { font-size: 26px; line-height: 1.2; margin: 0 0 6px; }
+    h2 {
+      font-size: 18px;
+      margin: 16px 0 5px;
+      padding-bottom: 3px;
+      border-bottom: 1px solid #ddd;
+    }
+    h3 { font-size: 15px; margin: 7px 0 3px; }
+    p { margin: 5px 0; }
+    a { color: #0645ad; overflow-wrap: anywhere; }
+    .list { margin: 3px 0; padding-left: 1.2em; }
+    .list li { margin: 2px 0; }
+
+    .equation {
+      font: 1em/1.45 "Cambria Math", Georgia, serif;
+      background: #f6f6f6;
+      padding: 3px 9px;
+      text-align: center;
+    }
+
+    .results { width: 100%; border-collapse: collapse; margin: 6px 0; }
+    .results th, .results td {
+      padding: 4px 7px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+      vertical-align: top;
+    }
+    .results thead { background: #f6f6f6; }
+
+    .prototype-grid, .schedule {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px 16px;
+    }
+    .prototype-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin: 8px 0;
+    }
+    figure { margin: 0; break-inside: avoid; }
+    figure img { display: block; width: 100%; height: auto; }
+    .peak-crop { overflow: hidden; aspect-ratio: 1180 / 730; }
+    .peak-crop img { transform: scale(1.85); transform-origin: 44% 40%; }
+    figcaption { font-size: .85em; line-height: 1.3; margin-top: 3px; }
+    .image-slot {
+      display: grid;
+      place-items: center;
+      min-height: 58px;
+      border: 1px dashed #aaa;
+      background: #f7f7f7;
+      color: #555;
+      font-size: .85em;
+    }
+
+    .milestone-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 16px;
+      list-style: none;
+      padding: 0;
+    }
+
+    @media screen and (max-width: 540px) {
+      body { margin: 18px auto; padding: 0 16px; }
+      .schedule { grid-template-columns: 1fr; gap: 0; }
+    }
+
+    @page { size: letter; margin: .55in; }
+    @media print {
+      body { margin: 0; padding: 0; font-size: 10pt; line-height: 1.25; }
+      h1 { font-size: 19pt; }
+      h2 { font-size: 12pt; margin-top: 9px; }
+      h3 { font-size: 10pt; }
+      h1, h2, h3 { break-after: avoid; }
+      .results, .prototype-grid, .schedule { break-inside: avoid; }
+      .prototype-grid { gap: 4px 12px; }
+      .image-slot { min-height: 30pt; }
+      .prototype-grid img { max-height: 72pt; object-fit: contain; }
+      .prototype-grid .peak-crop { width: min(100%, 116pt); margin-inline: auto; }
+      .prototype-grid .peak-crop img { max-height: none; }
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <h1>FerroPlay: Interactive Magnetic Fluid Simulation</h1>
+    <p>CS 184 Final Project Milestone<br>Team Members: Cici Cai, Ian Meng Si, Stephanie Yao, William Xu</p>
+
+    <h2>1. Introduction and Progress Summary</h2>
+    <p>FerroPlay is an interactive simulation of a ferrofluid surface in a small container. Our goal is to let users move a virtual magnet and adjust its strength to explore how the surface deforms and develops characteristic spikes.</p>
+
+    <p>We built a C++ surface solver and an interactive Polyscope viewer for one magnet and one tray. The surface rises near the magnet, follows it as it moves, and relaxes when the field is switched off. A separate uniform-field experiment grows peaks from small surface perturbations. The latest iteration adds a transparent circular dish and lets a single magnet generate a local cluster of peaks.</p>
+
+    <h2>2. Research Results</h2>
+    <p>Cowley and Rosensweig showed in 1967 that a magnetic field perpendicular to a ferrofluid surface can make small ripples grow into a pattern of peaks. This finding inspired FerroPlay’s uniform-field experiment. <a href="https://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/abs/interfacial-stability-of-a-ferromagnetic-fluid/B40DFB1706780F071CDC7B0DFBFF7FCD">Cowley and Rosensweig (1967)</a></p>
+    <p>We modeled the fluid by storing surface height <var>h</var> and vertical velocity <var>v</var> = ∂<var>h</var>/∂<var>t</var> on a regular grid. Height is measured from the flat resting surface, and <var>t</var> is simulation time. The surface acceleration <var>h</var><sub>tt</sub> measures how quickly its vertical velocity changes, calculated as:</p>
+    <p class="equation"><var>h</var><sub>tt</sub> = −<var>g</var><sub>h</sub><var>h</var> + <var>c</var><sub>h</sub>∇²<var>h</var> − γ<var>h</var><sub>t</sub> + <var>F</var><sub>m</sub> − ⟨<var>F</var><sub>m</sub>⟩</p>
+    <p>Each term contributes to the surface’s vertical acceleration. <strong>Gravity-like restoring</strong> (−<var>g</var><sub>h</sub><var>h</var>) pulls raised areas down and pushes depressions up, with strength set by <var>g</var><sub>h</sub>. <strong>Surface tension</strong> (<var>c</var><sub>h</sub>∇²<var>h</var>) smooths bumps and dips. ∇²<var>h</var> measures how a point’s height differs from its neighbors, and <var>c</var><sub>h</sub> sets the smoothing strength. <strong>Drag</strong> (−γ<var>h</var><sub>t</sub>) opposes vertical motion, with γ setting how quickly it dies out.</p>
+    <p><strong>The important term is magnetic forcing.</strong> <var>F</var><sub>m</sub> represents the local upward acceleration estimated from the squared dipole field on the resting plane. The reason we did this was, if the whole surface rose with a fixed footprint, the model would effectively create extra liquid. Subtracting the area-weighted average ⟨<var>F</var><sub>m</sub>⟩ removes that overall lift. As the surface rises near the magnet, it dips elsewhere so the total liquid volume stays the same. 
+      Our solver sets the slope across each tray wall to zero and adjusts volume to be balanced every 1/240 of a simulated second.</p>
+    <p>To model the full liquid surface in the uniform-field experiment, we start with a flat height grid and add tiny, repeatable bumps and dips. The shape of the dish, its boundary, and the simulation mesh determine which standing ripples fit. The original square prototype used a cosine transform to separate those ripples.</p>
+    <p>To model which ripples grow under a magnetic field, we assign each ripple an effective stiffness <var>K</var>(<var>q</var>). The wavenumber <var>q</var> measures how closely spaced the ripple crests are. The stiffness <var>K</var>(<var>q</var>) tells us whether a ripple of that spacing tends to flatten or grow:</p>
+    <p class="equation"><var>K</var>(<var>q</var>) = <var>g</var><sub>h</sub> + <var>c</var><sub>h</sub><var>q</var>² − β<var>q</var></p>
+    <p>The gravity-like term <var>g</var><sub>h</sub> pushes all ripples back toward flat. Surface tension <var>c</var><sub>h</sub><var>q</var>² pushes back hardest on closely spaced ripples. The magnetic term −β<var>q</var> reduces that pushback, with β setting its strength. A ripple grows when <var>K</var>(<var>q</var>) is negative, and peaks form where growing ripples reinforce one another. <a href="https://github.com/ianmengsi/FerroPlay/blob/379431d/docs/model.md">Model derivation</a></p>
+
+    <h2>3. Preliminary Results and Core Simulation</h2>
+    <p>The Polyscope viewer shows a glossy liquid surface in a transparent circular dish. Sliders let us move the virtual magnet and adjust its height and strength. A weak field barely lifts the surface. A stronger field creates a cluster of peaks near the magnet.</p>
+    <p>All three simulation tests shown below passed.</p>
+    <table class="results">
+      <thead><tr><th scope="col">Test</th><th scope="col">Observed result</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Field strength</th><td>A weak field barely raised the liquid. At strength 0.92, six distinct peaks formed on the default mesh after 4.5 simulated seconds.</td></tr>
+        <tr><th scope="row">Magnet tracking</th><td>When we moved the magnet from left to right, the raised region followed it across the dish.</td></tr>
+        <tr><th scope="row">Field switch-off</th><td>After we turned the field off, the surface was nearly flat within three simulated seconds.</td></tr>
+      </tbody>
+    </table>
+    <p>We chose the mesh with 49 samples across the dish because it produced smoother peak outlines and stayed within the 60 FPS frame budget in our Windows tests. The exact peak pattern changed with mesh resolution.</p>
+
+    <div class="prototype-grid" aria-label="FerroPlay circular-dish demo screenshots">
+      <figure>
+        <img src="captures/circular-pass/demo/01-no-field.png" alt="Field off. The liquid surface starts flat.">
+        <figcaption>Field off. The liquid surface starts flat.</figcaption>
+      </figure>
+      <figure>
+        <img src="captures/circular-pass/demo/02-stationary-magnet.png" alt="Strong field. Peaks form near the stationary magnet.">
+        <figcaption>Strong field. Peaks form near the stationary magnet.</figcaption>
+      </figure>
+      <figure>
+        <img src="captures/circular-pass/demo/weak-field-without-ui.png" alt="Weak field. The surface rises slightly beneath the magnet.">
+        <figcaption>Weak field. The surface rises slightly beneath the magnet.</figcaption>
+      </figure>
+      <figure>
+        <div class="peak-crop">
+          <img src="captures/circular-pass/demo/07-peak-closeup.png" alt="Close-up of the peaks from a low angle.">
+        </div>
+        <figcaption>Close-up of the peaks from a low angle.</figcaption>
+      </figure>
+      <figure>
+        <img src="captures/circular-pass/demo/05-normal-field.png" alt="Peaks spread across the circular dish under a uniform vertical magnetic field.">
+        <figcaption>Uniform vertical field. Peaks form across the dish.</figcaption>
+      </figure>
+      <figure>
+        <img src="captures/circular-pass/demo/06-full-ui.png" alt="FerroPlay viewer showing the dish and magnet controls.">
+        <figcaption>Full viewer with controls for magnet position, height, and strength.</figcaption>
+      </figure>
+    </div>
+
+    <h2>4. Updated Schedule</h2>
+    <div class="schedule">
+      <div>
+        <h3>Week 3 (November 23–29): Visuals and Simulation</h3>
+        <ul class="list">
+          <li>Refine spike shapes, surface smoothness, and reflections.</li>
+          <li>Test performance at different resolutions and field strengths.</li>
+          <li>If time allows, try multiple magnets, oscillating fields, and music-reactive effects.</li>
+        </ul>
+
+      </div>
+      <div>
+        <h3>Week 4 (November 30–December 6): Testing and Presentation</h3>
+        <ul class="list">
+          <li>Integrate the simulation, rendering, and interface.</li>
+          <li>Fix bugs and improve performance.</li>
+          <li>Compare results across settings.</li>
+          <li>Finish the report and slides, and rehearse the presentation.</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Milestone Links</h3>
+    <!-- Replace each pending entry with an anchor using its absolute URL so
+         the webpage, slides, and video remain clickable in the printed PDF. -->
+    <ul class="list milestone-links">
+      <li><a href="https://cicicai379.github.io/ferroplay-milestone/">Milestone webpage</a></li>
+      <li>Milestone video (URL pending)</li>
+      <li><a href="https://docs.google.com/presentation/d/1PjDVNVQZ4aUp4dzuo9OoIC94xjF4OGLCiE5fMSBf2mo/edit?slide=id.h61241706045d7584_2_43#slide=id.h61241706045d7584_2_43">Milestone slides</a></li>
+    </ul>
+  </main>
+</body>
+</html>
