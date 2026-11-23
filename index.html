@@ -108,7 +108,7 @@
 
     <h2>2. Research Results</h2>
     <p>Cowley and Rosensweig showed that a vertical magnetic field can turn small disturbances in a ferrofluid surface into peaks. Their analysis explains why gravity and surface tension suppress different ripple sizes, while the magnetic field can amplify a band of sizes between them. <a href="https://www.cambridge.org/core/journals/journal-of-fluid-mechanics/article/abs/interfacial-stability-of-a-ferromagnetic-fluid/B40DFB1706780F071CDC7B0DFBFF7FCD">Cowley and Rosensweig (1967)</a></p>
-    <p>We model the liquid surface by tracking its height <var>h</var> and vertical velocity <var>v</var> at each point on a circular mesh. Height is measured relative to the flat resting surface. The first equation combines the effects that push the surface up or down.</p>
+    <p>Based on this, we modelled the liquid surface by tracking its height <var>h</var> and vertical velocity <var>v</var> at each point on a circular mesh. Height is measured relative to the flat resting surface. The first equation combines the effects that push the surface up or down.</p>
     <p class="equation"><var>A</var>(<var>h</var>) = −<var>gh</var> − <var>cLh</var> + <var>F</var> + <var>R</var>(<var>h</var>)</p>
     <p>The <strong>gravity-like term</strong> (−<var>gh</var>) pulls raised areas down and pushes dips back up. The <strong>surface-tension term</strong> (−<var>cLh</var>) smooths bumps and dips, with <var>L</var> measuring how each point’s height differs from its neighbors. The coefficients <var>g</var> and <var>c</var> set the strength of these effects. The <strong>magnetic term</strong> <var>F</var> lifts the liquid and can amplify ripples near the magnet. The <strong>floor term</strong> <var>R</var>(<var>h</var>) pushes deep dips upward as they approach the bottom of the dish.</p>
     <p>The solver applies damping to slow the motion and advances by 1/240 of a simulated second. At each step, it removes the area-weighted mean from the updated velocity, then advances the height and removes its area-weighted mean. This lets the liquid rise in one area and dip elsewhere while keeping the same volume.</p>
@@ -158,6 +158,7 @@
     </div>
 
     <h2>4. Updated Schedule</h2>
+    <p>We are right on schedule and met our milestone goal of building an interactive prototype that showed how a movable magnet shapes the ferrofluid surface.</p>
     <div class="schedule">
       <div>
         <h3>Week 3 (November 23–29): Visuals and Simulation</h3>
